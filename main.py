@@ -13,6 +13,7 @@ config_obj = configparser.ConfigParser()
 config_obj.read(config_file)
 
 
+# Process stock tickers into a format that is recognisable by the yfinance module
 def read_tickers(file_tickers):
  
     tickers = ''
