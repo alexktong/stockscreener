@@ -154,3 +154,4 @@ for market in ['hkex', 'sgx', 'asx']:
 
 	# Save dataframe to an output CSV file
 	stocks_df.to_csv(output_file, index=False)
+	
