@@ -44,44 +44,44 @@ def calculate_stock_metrics_dict(stock_ticker, income_statement, balance_sheet):
 
 	# Average ROCE
 	try:
-			# ROCE = EBIT / Total Assets
-			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce = roce.mean()
+		# ROCE = EBIT / Total Assets
+		roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
+		roce = roce.mean()
 	except (KeyError, ZeroDivisionError):
-			roce = -999
+		roce = -999
 
 	# Average EBIT margin
 	try:
-			ebit_margin = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Total Revenue']
-			ebit_margin = ebit_margin.mean()
+		ebit_margin = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Total Revenue']
+		ebit_margin = ebit_margin.mean()
 	except (KeyError, ZeroDivisionError):
-			ebit_margin = -999
+		ebit_margin = -999
 
 	# Average interest coverage
 	try:
-			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage = interest_coverage.mean()
+		interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
+		interest_coverage = interest_coverage.mean()
 	except (KeyError, ZeroDivisionError):
-			interest_coverage = -999
+		interest_coverage = -999
 
 	# Latest debt / equity ratio       
 	try:
-			debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
-			debt_equity = debt_equity.iloc[0]
+		debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
+		debt_equity = debt_equity.iloc[0]
 	except (KeyError, ZeroDivisionError):
-			debt_equity = -999
+		debt_equity = -999
 
 	# Latest P/B
 	try:
-			pb = stock.info['priceToBook']
+		pb = stock.info['priceToBook']
 	except KeyError:
-			pb = -999
+		pb = -999
 
 	# Latest P/E
 	try:
-			pe = stock.info['currentPrice'] / stock.info['trailingEps']
+		pe = stock.info['currentPrice'] / stock.info['trailingEps']
 	except (KeyError, ZeroDivisionError):
-			pe = -999
+		pe = -999
 	
 	# Company information
 	try:
