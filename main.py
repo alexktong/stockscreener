@@ -44,7 +44,7 @@ def calculate_stock_metrics_dict(stock_ticker, income_statement, balance_sheet):
 
 	# Average ROCE
 	try:
-		# ROCE = EBIT / Total Assets
+	# ROCE = EBIT / Total Assets
 		roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
 		roce = roce.mean()
 	except (KeyError, ZeroDivisionError):
@@ -154,4 +154,3 @@ for market in ['hkex', 'sgx', 'asx']:
 
 	# Save dataframe to an output CSV file
 	stocks_df.to_csv(output_file, index=False)
-	
