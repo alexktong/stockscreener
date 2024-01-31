@@ -1,11 +1,16 @@
 import os
 import configparser
-import json
 from tqdm import tqdm
 import random
 import time
 import pandas as pd
 import yfinance as yf
+
+
+def create_directory(directory_path):
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
 
 
 # Process stock tickers into a format consistent with Yahoo Finance tickers
@@ -130,22 +135,24 @@ def parse_to_dataframe(list_of_dicts):
 def main():
 
 	# Load config file
-	config_file = 'config.ini'
+	config_file = '/home/alexktong_92/python/stockscreener/config.ini'
 
 	config_obj = configparser.ConfigParser()
 	config_obj.read(config_file)
 
+	input_directory = config_obj.get('input', 'directory')
+	
+	output_directory = config_obj.get('output', 'directory')
+	create_directory(output_directory)
+
 	# Loop through stock exchanges
 	for market in ['hkex', 'sgx', 'asx']:
-		
-		# Define output file name
-		output_file = config_obj.get('output', f'output_{market}')
 
 		# Retrieve file containing stock tickers
 		file_tickers = config_obj.get('input', f'file_tickers_{market}')
 
 		# Post-process stock ticker file
-		tickers = read_tickers(market, file_tickers)
+		tickers = read_tickers(market, os.path.join(input_directory, file_tickers))
 
 		stocks_list = []
 		for ticker in tqdm(tickers, desc=f'{market} tickers'):
@@ -163,8 +170,11 @@ def main():
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
 
+		# Define output file name
+		output_file = config_obj.get('output', f'output_{market}')
+		
 		# Save dataframe to an output CSV file
-		stocks_df.to_csv(output_file, index=False)
+		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 
 if __name__ == '__main__':
