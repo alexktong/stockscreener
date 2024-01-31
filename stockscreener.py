@@ -1,3 +1,4 @@
+import os
 import configparser
 import json
 from tqdm import tqdm
@@ -6,38 +7,26 @@ import time
 import pandas as pd
 import yfinance as yf
 
-# Load config file
-config_file = 'config.ini'
-
-config_obj = configparser.ConfigParser()
-config_obj.read(config_file)
-
 
 # Process stock tickers into a format consistent with Yahoo Finance tickers
 def read_tickers(market, file_tickers):
  
-    tickers = ''
-     
-    # ASX stock constituents
-    if market == 'asx':         
-        tickers = pd.read_csv(file_tickers, usecols=['Ticker'])['Ticker']
+	# ASX stock constituents
+	if market == 'asx':         
+		tickers = pd.read_csv(file_tickers, usecols=['Ticker'])['Ticker']
 
+	# HKEX stock constituents
+	elif market == 'hkex':
+		tickers = pd.read_csv(file_tickers, usecols=['Stock Code'])['Stock Code']
 
-    # HKEX stock constituents
-    elif market == 'hkex':
-        tickers = pd.read_csv(file_tickers, usecols=['Stock Code'])['Stock Code']
+	# SGX stock constituents
+	elif market == 'sgx':
+		tickers = pd.read_csv(file_tickers, usecol=['tickers'])['tickers']
 
-    # SGX stock constituents
-    elif market == 'sgx':
-        with open(file_tickers, 'r') as file:
-            data = json.load(file)
+	else:
+		tickers == None
 
-        tickers = []
-        for stock in data['data']['prices']:
-            sgx_ticker = f"{stock['nc']}.SI"
-            tickers.append(sgx_ticker)
-
-    return tickers
+	return tickers
 
 
 def calculate_stock_metrics_dict(stock_ticker):
@@ -125,7 +114,7 @@ def calculate_stock_metrics_dict(stock_ticker):
 
 def random_wait_time_seconds_max(max_seconds):
 
-	random_wait_time = random.randint(1, max_seconds)
+	random_wait_time = random.uniform(1, max_seconds)
 	time.sleep(random_wait_time)
 
 
@@ -140,6 +129,12 @@ def parse_to_dataframe(list_of_dicts):
 
 def main():
 
+	# Load config file
+	config_file = 'config.ini'
+
+	config_obj = configparser.ConfigParser()
+	config_obj.read(config_file)
+
 	# Loop through stock exchanges
 	for market in ['hkex', 'sgx', 'asx']:
 		
@@ -147,7 +142,7 @@ def main():
 		output_file = config_obj.get('output', f'output_{market}')
 
 		# Retrieve file containing stock tickers
-		file_tickers = config_obj.get('input', f'tickers_{market}')
+		file_tickers = config_obj.get('input', f'file_tickers_{market}')
 
 		# Post-process stock ticker file
 		tickers = read_tickers(market, file_tickers)
