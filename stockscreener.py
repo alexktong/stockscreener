@@ -18,7 +18,7 @@ def read_tickers(market, file_tickers):
  
 	# ASX stock constituents
 	if market == 'asx':         
-		tickers = pd.read_csv(file_tickers, usecols=['Ticker'])['Ticker']
+		tickers = pd.read_csv(file_tickers, usecols=['tickers'])['tickers']
 
 	# HKEX stock constituents
 	elif market == 'hkex':
@@ -26,7 +26,7 @@ def read_tickers(market, file_tickers):
 
 	# SGX stock constituents
 	elif market == 'sgx':
-		tickers = pd.read_csv(file_tickers, usecol=['tickers'])['tickers']
+		tickers = pd.read_csv(file_tickers, usecols=['tickers'])['tickers']
 
 	else:
 		tickers == None
@@ -47,13 +47,15 @@ def calculate_stock_metrics_dict(stock_ticker):
 	
 	if len(income_statement) > 0 and len(balance_sheet) > 0:
 	
-		# Average ROCE
+		# ROCE
 		try:
 			# ROCE = EBIT / Total Assets
 			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce = roce.mean()
+			roce_latest = roce.sort_index(ascending=0).iloc[0] # Latest ROCE
+			roce_avg = roce.mean() # Average ROCE
 		except (KeyError, ZeroDivisionError):
-			roce = -999
+			roce_latest = -999
+			roce_avg = -999
 
 		# Average EBIT margin
 		try:
@@ -65,9 +67,11 @@ def calculate_stock_metrics_dict(stock_ticker):
 		# Average interest coverage
 		try:
 			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage = interest_coverage.mean()
+			interest_coverage_latest = interest_coverage.sort_index(ascending=0).iloc[0] # Latest interest coverage
+			interest_coverage_avg = interest_coverage.mean() # Average interest coverage
 		except (KeyError, ZeroDivisionError):
-			interest_coverage = -999
+			interest_coverage_latest = -999
+			interest_coverage_avg -999
 
 		# Latest debt / equity ratio       
 		try:
@@ -109,7 +113,7 @@ def calculate_stock_metrics_dict(stock_ticker):
 			market_cap = -999
 						
 		# Store stock metrics in a dictionary
-		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'market_cap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce': roce, 'ebit_margin': ebit_margin, 'interest_coverage': interest_coverage, 'debt_equity': debt_equity}
+		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_latest': roce_latest, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_latest': interest_coverage_latest, 'interest_cov_avg': interest_coverage_avg, 'debt_equity': debt_equity}
 
 	else:
 		stock_dict = None
@@ -127,7 +131,7 @@ def parse_to_dataframe(list_of_dicts):
 	
 	df = pd.DataFrame(list_of_dicts)
 
-	df = df.sort_values('roce', ascending=False)
+	df = df.sort_values('roce_latest', ascending=False)
 
 	return df
 
@@ -175,6 +179,7 @@ def main():
 		
 		# Save dataframe to an output CSV file
 		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+		os.listdir(os.path.join(output_directory))
 
 
 if __name__ == '__main__':
