@@ -51,7 +51,7 @@ def calculate_stock_metrics_dict(stock_ticker):
 		try:
 			# ROCE = EBIT / Total Assets
 			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce_latest = roce.sort_index(ascending=0).iloc[0] # Latest ROCE
+			roce_latest = roce.sort_index(ascending=False).iloc[0] # Latest ROCE
 			roce_avg = roce.mean() # Average ROCE
 		except (KeyError, ZeroDivisionError):
 			roce_latest = -999
@@ -67,11 +67,11 @@ def calculate_stock_metrics_dict(stock_ticker):
 		# Average interest coverage
 		try:
 			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage_latest = interest_coverage.sort_index(ascending=0).iloc[0] # Latest interest coverage
+			interest_coverage_latest = interest_coverage.sort_index(ascending=False).iloc[0] # Latest interest coverage
 			interest_coverage_avg = interest_coverage.mean() # Average interest coverage
 		except (KeyError, ZeroDivisionError):
 			interest_coverage_latest = -999
-			interest_coverage_avg -999
+			interest_coverage_avg = -999
 
 		# Latest debt / equity ratio       
 		try:
@@ -169,7 +169,7 @@ def main():
 				stocks_list.append(stock_dict)
 
 			# Wait before proceeding to next loop to reduce risk of IP block
-			random_wait_time_seconds_max(4)
+			random_wait_time_seconds_max(3)
 
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
@@ -179,7 +179,6 @@ def main():
 		
 		# Save dataframe to an output CSV file
 		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
-		os.listdir(os.path.join(output_directory))
 
 
 if __name__ == '__main__':
