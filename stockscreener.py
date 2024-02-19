@@ -215,21 +215,21 @@ def main():
 		stocks_df = parse_to_dataframe(stocks_list)
 
 		# # Define output file name
-		# output_file = config_obj.get(market, 'output_all')
+		# output_file = config_obj.get(market, 'file_all')
 		
 		# Save dataframe to an output CSV file
 		# stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
-		output_filtered_1 = config_obj.get('output', 'output_real_estate_low_pb')
+		output_filtered_1 = config_obj.get('output', 'file_real_estate_low_pb')
 		stocks_real_estate_low_pb_df = filter_real_estate_low_pb(stocks_df)
 		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
 
-		output_filtered_2 = config_obj.get('output', 'output_net_net')
+		output_filtered_2 = config_obj.get('output', 'file_net_net')
 		stocks_net_net_df = filter_net_net(stocks_df)
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
 
-		output_filtere_3 = config_obj.get('output', 'output_low_debt')
+		output_filtere_3 = config_obj.get('output', 'file_low_debt')
 		stocks_low_Debt_df = filter_low_debt(stocks_df)
 		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtere_3), index=False)
 
