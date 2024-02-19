@@ -51,10 +51,10 @@ def calculate_stock_metrics_dict(stock_ticker):
 		try:
 			# ROCE = EBIT / Total Assets
 			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce_latest = roce.iloc[0] # Latest ROCE
+			roce_cy = roce.iloc[0] # cy ROCE
 			roce_avg = roce.mean() # Average ROCE
 		except (KeyError, ZeroDivisionError):
-			roce_latest = -999
+			roce_cy = -999
 			roce_avg = -999
 
 		# Average EBIT margin
@@ -67,26 +67,28 @@ def calculate_stock_metrics_dict(stock_ticker):
 		# Average interest coverage
 		try:
 			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage_latest = interest_coverage.iloc[0] # Latest interest coverage
+			interest_coverage_cy = interest_coverage.iloc[0] # cy interest coverage
 			interest_coverage_avg = interest_coverage.mean() # Average interest coverage
 		except (KeyError, ZeroDivisionError):
-			interest_coverage_latest = -999
+			interest_coverage_cy = -999
 			interest_coverage_avg = -999
 
-		# Latest debt / equity ratio       
+		# cy debt / equity ratio       
 		try:
 			debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
-			debt_equity = debt_equity.iloc[0]
+			debt_equity_cy = debt_equity.iloc[0] # cy debt-equity ratio
+			debt_equity_avg = debt_equity.mean() # Average debt-equity ratio
 		except (KeyError, ZeroDivisionError):
-			debt_equity = -999
+			debt_equity_cy = -999
+			debt_equity_avg = -999
 
-		# Latest P/B
+		# cy P/B
 		try:
 			pb = stock_info['priceToBook']
 		except KeyError:
 			pb = -999
 
-		# Latest P/E
+		# cy P/E
 		try:
 			pe = stock_info['currentPrice'] / stock_info['trailingEps']
 		except (KeyError, ZeroDivisionError):
@@ -112,15 +114,15 @@ def calculate_stock_metrics_dict(stock_ticker):
 		except KeyError:
 			market_cap = -999
 
-		# Latest cash / equity ratio
+		# cy cash / equity ratio
 		try:
 			cash_assets = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments'] / balance_sheet.loc['Total Assets']
-			cash_assets = cash_assets.iloc[0] # Latest ratio
+			cash_assets = cash_assets.iloc[0] # cy ratio
 		except (KeyError, ZeroDivisionError):
 			cash_assets = -999			
 					
 		# Store stock metrics in a dictionary
-		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_latest': roce_latest, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_latest': interest_coverage_latest, 'interest_cov_avg': interest_coverage_avg, 'debt_equity': debt_equity, 'cash_assets': cash_assets}
+		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_equity_avg': debt_equity_avg, 'cash_assets': cash_assets}
 
 	else:
 		stock_dict = None
@@ -138,7 +140,7 @@ def parse_to_dataframe(list_of_dicts):
 	
 	df = pd.DataFrame(list_of_dicts)
 
-	df = df.sort_values('roce_latest', ascending=False)
+	df = df.sort_values('roce_cy', ascending=False)
 
 	return df
 
@@ -166,6 +168,14 @@ def filter_net_net(df, max_pb_ratio=0.7):
 	return df_segment
 
 
+def filter_low_debt(df, max_debt_ratio=0.1):
+
+	# Low debt
+	df_segment = df[df['debt_equity_cy'] <= max_debt_ratio]
+
+	return df_segment
+
+
 def main():
 
 	# Load config file
@@ -174,16 +184,16 @@ def main():
 	config_obj = configparser.ConfigParser()
 	config_obj.read(config_file)
 
-	input_directory = config_obj.get('input', 'directory')
-	
-	output_directory = config_obj.get('output', 'directory')
+	input_directory = config_obj.get('default', 'input_directory')
+	output_directory = config_obj.get('default', 'output_directory')
 	create_directory(output_directory)
 
 	# Loop through stock exchanges
-	for market in ['hkex', 'sgx', 'asx']:
+	markets = config_obj.get('default', 'markets').split(', ')
+	for market in markets:
 
 		# Retrieve file containing stock tickers
-		file_tickers = config_obj.get('input', f'file_tickers_{market}')
+		file_tickers = config_obj.get(market, 'file_tickers')
 
 		# Post-process stock ticker file
 		tickers = read_tickers(market, os.path.join(input_directory, file_tickers))
@@ -204,20 +214,24 @@ def main():
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
 
-		# Define output file name
-		output_file = config_obj.get('output', f'output_{market}')
+		# # Define output file name
+		# output_file = config_obj.get(market, 'output_all')
 		
 		# Save dataframe to an output CSV file
-		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+		# stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
-		output_filtered_1 = config_obj.get('output', f'output_{market}_real_estate_low_pb')
+		output_filtered_1 = config_obj.get('output', 'output_real_estate_low_pb')
 		stocks_real_estate_low_pb_df = filter_real_estate_low_pb(stocks_df)
 		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
 
-		output_filtered_2 = config_obj.get('output', f'output_{market}_net_net')
+		output_filtered_2 = config_obj.get('output', 'output_net_net')
 		stocks_net_net_df = filter_net_net(stocks_df)
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
+
+		output_filtere_3 = config_obj.get('output', 'output_low_debt')
+		stocks_low_Debt_df = filter_low_debt(stocks_df)
+		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtere_3), index=False)
 
 
 if __name__ == '__main__':
