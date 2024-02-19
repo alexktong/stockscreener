@@ -51,7 +51,7 @@ def calculate_stock_metrics_dict(stock_ticker):
 		try:
 			# ROCE = EBIT / Total Assets
 			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce_latest = roce.sort_index(ascending=False).iloc[0] # Latest ROCE
+			roce_latest = roce.iloc[0] # Latest ROCE
 			roce_avg = roce.mean() # Average ROCE
 		except (KeyError, ZeroDivisionError):
 			roce_latest = -999
@@ -67,7 +67,7 @@ def calculate_stock_metrics_dict(stock_ticker):
 		# Average interest coverage
 		try:
 			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage_latest = interest_coverage.sort_index(ascending=False).iloc[0] # Latest interest coverage
+			interest_coverage_latest = interest_coverage.iloc[0] # Latest interest coverage
 			interest_coverage_avg = interest_coverage.mean() # Average interest coverage
 		except (KeyError, ZeroDivisionError):
 			interest_coverage_latest = -999
@@ -111,9 +111,16 @@ def calculate_stock_metrics_dict(stock_ticker):
 			market_cap = market_cap / 1000000
 		except KeyError:
 			market_cap = -999
-						
+
+		# Latest cash / equity ratio
+		try:
+			cash_assets = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments'] / balance_sheet.loc['Total Assets']
+			cash_assets = cash_assets.iloc[0] # Latest ratio
+		except (KeyError, ZeroDivisionError):
+			cash_assets = -999			
+					
 		# Store stock metrics in a dictionary
-		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_latest': roce_latest, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_latest': interest_coverage_latest, 'interest_cov_avg': interest_coverage_avg, 'debt_equity': debt_equity}
+		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_latest': roce_latest, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_latest': interest_coverage_latest, 'interest_cov_avg': interest_coverage_avg, 'debt_equity': debt_equity, 'cash_assets': cash_assets}
 
 	else:
 		stock_dict = None
@@ -136,10 +143,33 @@ def parse_to_dataframe(list_of_dicts):
 	return df
 
 
+def filter_real_estate_low_pb(df, max_pb_ratio=0.7):
+
+	# Real estate only
+	list_of_real_estate_industries = ['reit', 'real estate']
+	df_segment = df[df['industry'].str.contains('|'.join(list_of_real_estate_industries), case=False)]
+
+	# Low PB
+	df_segment = df_segment[df_segment['pb'].between(0, max_pb_ratio)]
+
+	return df_segment
+
+
+def filter_net_net(df, max_pb_ratio=0.7):
+
+	# Low PB
+	df_segment = df[df['pb'].between(0, max_pb_ratio)]
+	
+	# High cash ratio
+	df_segment = df_segment[df_segment['cash_assets'] >= 0.8]
+
+	return df_segment
+
+
 def main():
 
 	# Load config file
-	config_file = '/home/alexktong_92/python/stockscreener/config.ini'
+	config_file = 'config.ini'
 
 	config_obj = configparser.ConfigParser()
 	config_obj.read(config_file)
@@ -179,6 +209,15 @@ def main():
 		
 		# Save dataframe to an output CSV file
 		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+
+		# Select screeners
+		output_filtered_1 = config_obj.get('output', f'output_{market}_real_estate_low_pb')
+		stocks_real_estate_low_pb_df = filter_real_estate_low_pb(stocks_df)
+		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
+
+		output_filtered_2 = config_obj.get('output', f'output_{market}_net_net')
+		stocks_net_net_df = filter_net_net(stocks_df)
+		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
 
 
 if __name__ == '__main__':
