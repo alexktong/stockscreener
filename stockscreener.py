@@ -7,6 +7,15 @@ import pandas as pd
 import yfinance as yf
 
 
+# Load config file
+def load_config(config_file):
+
+    config_obj = configparser.ConfigParser()
+    config_obj.read(config_file)
+
+    return config_obj
+
+
 def create_directory(directory_path):
 
     if not os.path.exists(directory_path):
@@ -179,10 +188,8 @@ def filter_low_debt(df, max_debt_ratio=0.1):
 def main():
 
 	# Load config file
-	config_file = 'config.ini'
-
-	config_obj = configparser.ConfigParser()
-	config_obj.read(config_file)
+	config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+	config_obj = load_config(config_file)
 
 	input_directory = config_obj.get('default', 'input_directory')
 	output_directory = config_obj.get('default', 'output_directory')
@@ -221,15 +228,15 @@ def main():
 		# stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
-		output_filtered_1 = config_obj.get('output', 'file_real_estate_low_pb')
+		output_filtered_1 = config_obj.get(market, 'file_real_estate_low_pb')
 		stocks_real_estate_low_pb_df = filter_real_estate_low_pb(stocks_df)
 		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
 
-		output_filtered_2 = config_obj.get('output', 'file_net_net')
+		output_filtered_2 = config_obj.get(market, 'file_net_net')
 		stocks_net_net_df = filter_net_net(stocks_df)
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
 
-		output_filtere_3 = config_obj.get('output', 'file_low_debt')
+		output_filtere_3 = config_obj.get(market, 'file_low_debt')
 		stocks_low_Debt_df = filter_low_debt(stocks_df)
 		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtere_3), index=False)
 
