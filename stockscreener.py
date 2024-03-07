@@ -154,7 +154,7 @@ def parse_to_dataframe(list_of_dicts):
 	return df
 
 
-def filter_real_estate_low_pb(df, max_pb_ratio=0.7):
+def screener_real_estate_low_pb(df, max_pb_ratio=0.7):
 
 	# Real estate only
 	list_of_real_estate_industries = ['reit', 'real estate']
@@ -166,18 +166,18 @@ def filter_real_estate_low_pb(df, max_pb_ratio=0.7):
 	return df_segment
 
 
-def filter_net_net(df, max_pb_ratio=0.7):
+def screener_net_net(df, max_pb_ratio=0.7):
 
 	# Low PB
 	df_segment = df[df['pb'].between(0, max_pb_ratio)]
 	
 	# High cash ratio
-	df_segment = df_segment[df_segment['cash_assets'] >= 0.8]
+	df_segment = df_segment[df_segment['cash_assets'] >= 0.75]
 
 	return df_segment
 
 
-def filter_low_debt(df, max_debt_ratio=0.1):
+def screener_low_debt(df, max_debt_ratio=0.15):
 
 	# Low debt
 	df_segment = df[df['debt_equity_cy'] <= max_debt_ratio]
@@ -221,23 +221,23 @@ def main():
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
 
-		# # Define output file name
-		# output_file = config_obj.get(market, 'file_all')
+		# Define output file name
+		output_file = config_obj.get(market, 'file_all')
 		
 		# Save dataframe to an output CSV file
-		# stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
 		output_filtered_1 = config_obj.get(market, 'file_real_estate_low_pb')
-		stocks_real_estate_low_pb_df = filter_real_estate_low_pb(stocks_df)
+		stocks_real_estate_low_pb_df = screener_real_estate_low_pb(stocks_df)
 		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
 
 		output_filtered_2 = config_obj.get(market, 'file_net_net')
-		stocks_net_net_df = filter_net_net(stocks_df)
+		stocks_net_net_df = screener_net_net(stocks_df)
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
 
 		output_filtere_3 = config_obj.get(market, 'file_low_debt')
-		stocks_low_Debt_df = filter_low_debt(stocks_df)
+		stocks_low_Debt_df = screener_low_debt(stocks_df)
 		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtere_3), index=False)
 
 
