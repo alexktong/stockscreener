@@ -236,10 +236,9 @@ def main():
 		stocks_net_net_df = screener_net_net(stocks_df)
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
 
-		output_filtere_3 = config_obj.get(market, 'file_low_debt')
+		output_filtered_3 = config_obj.get(market, 'file_low_debt')
 		stocks_low_Debt_df = screener_low_debt(stocks_df)
-		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtere_3), index=False)
-
+		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtered_3), index=False)
 
 if __name__ == '__main__':
 	main()
