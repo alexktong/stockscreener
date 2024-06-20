@@ -208,6 +208,8 @@ def main():
 	output_directory = config_obj.get('default', 'output_directory')
 	create_directory(output_directory)
 
+	date_today = datetime.date.today()
+
 	# Loop through stock exchanges
 	markets = config_obj.get('default', 'markets').split(', ')
 	for market in markets:
@@ -234,22 +236,22 @@ def main():
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
 
-		# Define output file name
-		output_file = config_obj.get(market, 'file_all')
+		# Define output file name	
+		output_file = f'{market}_stock_screener_{date_today}.csv'
 		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
-		output_filtered_1 = config_obj.get(market, 'file_real_estate_low_pb')
 		stocks_real_estate_low_pb_df = screener_real_estate_low_pb(stocks_df)
-		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1), index=False)
+		output_filtered_1_file = f'{market}_real_estate_low_pb_{date_today}.csv'
+		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1_file), index=False)
 
-		output_filtered_2 = config_obj.get(market, 'file_net_net')
 		stocks_net_net_df = screener_net_net(stocks_df)
-		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2), index=False)
+		output_filtered_2_file = f'{market}_net_net_{date_today}.csv'
+		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2_file), index=False)
 
-		output_filtered_3 = config_obj.get(market, 'file_low_debt')
-		stocks_low_Debt_df = screener_low_debt(stocks_df)
-		stocks_low_Debt_df.to_csv(os.path.join(output_directory, output_filtered_3), index=False)
+		stocks_low_debt_df = screener_low_debt(stocks_df)
+		output_filtered_3_file = f'{market}_low_debt_{date_today}.csv'
+		stocks_low_debt_df.to_csv(os.path.join(output_directory, output_filtered_3_file), index=False)
 
 if __name__ == '__main__':
 	main()
