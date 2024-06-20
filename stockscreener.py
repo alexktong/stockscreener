@@ -1,3 +1,4 @@
+import datetime
 import os
 import configparser
 from tqdm import tqdm
@@ -17,9 +18,15 @@ def load_config(config_file):
 
 
 def create_directory(directory_path):
+	
+	if not os.path.exists(directory_path):
+		os.makedirs(directory_path)
+	else:
+		for file_name in os.listdir(directory_path):
+			file_path = os.path.join(directory_path, file_name)
 
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
+			if os.path.isfile(file_path):
+				os.unlink(file_path)
 
 
 # Process stock tickers into a format consistent with Yahoo Finance tickers
@@ -157,7 +164,7 @@ def parse_to_dataframe(list_of_dicts):
 def screener_real_estate_low_pb(df, max_pb_ratio=0.7):
 
 	# Real estate only
-	list_of_real_estate_industries = ['reit', 'real estate']
+	list_of_real_estate_industries = ['reit', 'real estate', 'lodging']
 	df_segment = df[df['industry'].str.contains('|'.join(list_of_real_estate_industries), case=False)]
 
 	# Low PB
@@ -166,13 +173,13 @@ def screener_real_estate_low_pb(df, max_pb_ratio=0.7):
 	return df_segment
 
 
-def screener_net_net(df, max_pb_ratio=0.7):
+def screener_net_net(df, max_pb_ratio=0.8, min_cash_assets_ratio=0.5):
 
 	# Low PB
 	df_segment = df[df['pb'].between(0, max_pb_ratio)]
 	
 	# High cash ratio
-	df_segment = df_segment[df_segment['cash_assets'] >= 0.75]
+	df_segment = df_segment[df_segment['cash_assets'] >= min_cash_assets_ratio]
 
 	return df_segment
 
@@ -223,8 +230,6 @@ def main():
 
 		# Define output file name
 		output_file = config_obj.get(market, 'file_all')
-		
-		# Save dataframe to an output CSV file
 		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
 		# Select screeners
