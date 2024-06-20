@@ -60,6 +60,8 @@ def calculate_stock_metrics_dict(stock_ticker):
 	
 	balance_sheet = stock.balance_sheet
 	balance_sheet = balance_sheet.fillna(0)
+
+	recommendations = stock.recommendations
 	
 	if len(income_statement) > 0 and len(balance_sheet) > 0:
 	
@@ -93,10 +95,8 @@ def calculate_stock_metrics_dict(stock_ticker):
 		try:
 			debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
 			debt_equity_cy = debt_equity.iloc[0] # cy debt-equity ratio
-			debt_equity_avg = debt_equity.mean() # Average debt-equity ratio
 		except (KeyError, ZeroDivisionError):
 			debt_equity_cy = -999
-			debt_equity_avg = -999
 
 		# cy P/B
 		try:
@@ -133,12 +133,18 @@ def calculate_stock_metrics_dict(stock_ticker):
 		# cy cash / equity ratio
 		try:
 			cash_assets = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments'] / balance_sheet.loc['Total Assets']
-			cash_assets = cash_assets.iloc[0] # cy ratio
+			cash_assets_cy = cash_assets.iloc[0] # cy ratio
 		except (KeyError, ZeroDivisionError):
-			cash_assets = -999			
-					
+			cash_assets_cy = -999
+
+		# analyst following
+		try:
+			analyst_following = recommendations[['strongBuy', 'buy', 'hold', 'sell', 'strongSell']].sum(axis=1).mean()
+		except KeyError:
+			analyst_following = -999
+
 		# Store stock metrics in a dictionary
-		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_equity_avg': debt_equity_avg, 'cash_assets': cash_assets}
+		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'cash_assets_cy': cash_assets_cy, 'analyst_folliwng': analyst_following}
 
 	else:
 		stock_dict = None
