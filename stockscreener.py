@@ -185,7 +185,7 @@ def screener_net_net(df, max_pb_ratio=0.8, min_cash_assets_ratio=0.5):
 	df_segment = df[df['pb'].between(0, max_pb_ratio)]
 	
 	# High cash ratio
-	df_segment = df_segment[df_segment['cash_assets'] >= min_cash_assets_ratio]
+	df_segment = df_segment[df_segment['cash_assets_cy'] >= min_cash_assets_ratio]
 
 	return df_segment
 
