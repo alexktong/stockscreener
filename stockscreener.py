@@ -21,12 +21,26 @@ def create_directory(directory_path):
 	
 	if not os.path.exists(directory_path):
 		os.makedirs(directory_path)
-	else:
-		for file_name in os.listdir(directory_path):
-			file_path = os.path.join(directory_path, file_name)
 
-			if os.path.isfile(file_path):
-				os.unlink(file_path)
+
+def remove_files_with_prefix(directory, prefix):
+    # Check if the directory exists
+    if not os.path.isdir(directory):
+        print(f"The directory {directory} does not exist.")
+        return
+    
+    # Iterate over all the files in the directory
+    for filename in os.listdir(directory):
+        # Check if the filename starts with the given prefix
+        if filename.startswith(prefix):
+            file_path = os.path.join(directory, filename)
+            
+            # Check if it is a file (not a directory) before deleting
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                print(f"Removed file: {file_path}")
+            else:
+                print(f"Skipped non-file: {file_path}")
 
 
 # Process stock tickers into a format consistent with Yahoo Finance tickers
@@ -214,6 +228,9 @@ def main():
 	markets = config_obj.get('default', 'markets').split(', ')
 	for market in markets:
 
+		# Remove output files for the market
+		remove_files_with_prefix(output_directory, market)
+
 		# Retrieve file containing stock tickers
 		file_tickers = config_obj.get(market, 'file_tickers')
 
@@ -236,11 +253,10 @@ def main():
 		# Create a dataframe of all stock metrics
 		stocks_df = parse_to_dataframe(stocks_list)
 
-		# Define output file name	
-		output_file = f'{market}_stock_screener_{date_today}.csv'
-		stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+		# Output screeners
+		# output_file = f'{market}_stock_screener_{date_today}.csv'
+		# stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
-		# Select screeners
 		stocks_real_estate_low_pb_df = screener_real_estate_low_pb(stocks_df)
 		output_filtered_1_file = f'{market}_real_estate_low_pb_{date_today}.csv'
 		stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1_file), index=False)
