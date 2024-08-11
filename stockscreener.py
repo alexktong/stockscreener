@@ -44,20 +44,10 @@ def remove_files_with_prefix(directory, prefix):
 
 
 # Process stock tickers into a format consistent with Yahoo Finance tickers
-def read_tickers(market, file_tickers):
- 
-	# ASX stock constituents
-	if market == 'asx':         
+def read_tickers(file_tickers):
+
+	if os.path.exists(file_tickers):
 		tickers = pd.read_csv(file_tickers, usecols=['tickers'])['tickers']
-
-	# HKEX stock constituents
-	elif market == 'hkex':
-		tickers = pd.read_csv(file_tickers, usecols=['Stock Code'])['Stock Code']
-
-	# SGX stock constituents
-	elif market == 'sgx':
-		tickers = pd.read_csv(file_tickers, usecols=['tickers'])['tickers']
-
 	else:
 		tickers == None
 
@@ -218,14 +208,14 @@ def main():
 	config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
 	config_obj = load_config(config_file)
 
-	input_directory = config_obj.get('default', 'input_directory')
-	output_directory = config_obj.get('default', 'output_directory')
+	input_directory = config_obj.get('directory', 'input')
+	output_directory = config_obj.get('directory', 'output')
 	create_directory(output_directory)
 
 	date_today = datetime.date.today()
 
 	# Loop through stock exchanges
-	markets = config_obj.get('default', 'markets').split(', ')
+	markets = config_obj.get('markets', 'markets').split(', ')
 	for market in markets:
 
 		# Remove output files for the market
@@ -235,7 +225,7 @@ def main():
 		file_tickers = config_obj.get(market, 'file_tickers')
 
 		# Post-process stock ticker file
-		tickers = read_tickers(market, os.path.join(input_directory, file_tickers))
+		tickers = read_tickers(os.path.join(input_directory, file_tickers))
 
 		stocks_list = []
 		for ticker in tqdm(tickers, desc=f'{market} tickers'):
