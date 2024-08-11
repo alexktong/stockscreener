@@ -265,9 +265,9 @@ def main():
 		output_filtered_2_file = f'{market}_net_net_{date_today}.csv'
 		stocks_net_net_df.to_csv(os.path.join(output_directory, output_filtered_2_file), index=False)
 
-		stocks_low_debt_df = screener_low_debt(stocks_df)
-		output_filtered_3_file = f'{market}_low_debt_{date_today}.csv'
-		stocks_low_debt_df.to_csv(os.path.join(output_directory, output_filtered_3_file), index=False)
+		# stocks_low_debt_df = screener_low_debt(stocks_df)
+		# output_filtered_3_file = f'{market}_low_debt_{date_today}.csv'
+		# stocks_low_debt_df.to_csv(os.path.join(output_directory, output_filtered_3_file), index=False)
 
 if __name__ == '__main__':
 	main()
