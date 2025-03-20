@@ -57,100 +57,104 @@ def read_tickers(file_tickers):
 def calculate_stock_metrics_dict(stock_ticker):
 
 	stock = yf.Ticker(stock_ticker)
-	stock_info = stock.info
 
-	income_statement = stock.income_stmt
-	income_statement = income_statement.fillna(0)
-	
-	balance_sheet = stock.balance_sheet
-	balance_sheet = balance_sheet.fillna(0)
-
-	recommendations = stock.recommendations
-	
-	if len(income_statement) > 0 and len(balance_sheet) > 0:
-	
-		# ROCE
-		try:
-			# ROCE = EBIT / Total Assets
-			roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
-			roce_cy = roce.iloc[0] # cy ROCE
-			roce_avg = roce.mean() # Average ROCE
-		except (KeyError, ZeroDivisionError):
-			roce_cy = -999
-			roce_avg = -999
-
-		# Average EBIT margin
-		try:
-			ebit_margin = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Total Revenue']
-			ebit_margin = ebit_margin.mean()
-		except (KeyError, ZeroDivisionError):
-			ebit_margin = -999
-
-		# Average interest coverage
-		try:
-			interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
-			interest_coverage_cy = interest_coverage.iloc[0] # cy interest coverage
-			interest_coverage_avg = interest_coverage.mean() # Average interest coverage
-		except (KeyError, ZeroDivisionError):
-			interest_coverage_cy = -999
-			interest_coverage_avg = -999
-
-		# cy debt / equity ratio       
-		try:
-			debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
-			debt_equity_cy = debt_equity.iloc[0] # cy debt-equity ratio
-		except (KeyError, ZeroDivisionError):
-			debt_equity_cy = -999
-
-		# cy P/B
-		try:
-			pb = stock_info['priceToBook']
-		except KeyError:
-			pb = -999
-
-		# cy P/E
-		try:
-			pe = stock_info['currentPrice'] / stock_info['trailingEps']
-		except (KeyError, ZeroDivisionError):
-			pe = -999
+	try:
+		stock_info = stock.info
+		income_statement = stock.income_stmt
+		income_statement = income_statement.fillna(0)
 		
-		# Company information
-		try:
-			long_name = stock_info['longName']
-		except KeyError:
-			long_name = 'NA'
+		balance_sheet = stock.balance_sheet
+		balance_sheet = balance_sheet.fillna(0)
+
+		recommendations = stock.recommendations
 		
-		# Industry
-		try:
-			industry = stock_info['industry']
-		except KeyError:
-			industry = 'N/A'
+		if len(income_statement) > 0 and len(balance_sheet) > 0:
+		
+			# ROCE
+			try:
+				# ROCE = EBIT / Total Assets
+				roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
+				roce_cy = roce.iloc[0] # cy ROCE
+				roce_avg = roce.mean() # Average ROCE
+			except (KeyError, ZeroDivisionError):
+				roce_cy = -999
+				roce_avg = -999
 
-		# Market cap
-		try:
-			market_cap = stock_info['marketCap']
-			# Convert to millions
-			market_cap = market_cap / 1000000
-		except KeyError:
-			market_cap = -999
+			# Average EBIT margin
+			try:
+				ebit_margin = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Total Revenue']
+				ebit_margin = ebit_margin.mean()
+			except (KeyError, ZeroDivisionError):
+				ebit_margin = -999
 
-		# cy cash / equity ratio
-		try:
-			cash_assets = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments'] / balance_sheet.loc['Total Assets']
-			cash_assets_cy = cash_assets.iloc[0] # cy ratio
-		except (KeyError, ZeroDivisionError):
-			cash_assets_cy = -999
+			# Average interest coverage
+			try:
+				interest_coverage = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / income_statement.loc['Interest Expense']
+				interest_coverage_cy = interest_coverage.iloc[0] # cy interest coverage
+				interest_coverage_avg = interest_coverage.mean() # Average interest coverage
+			except (KeyError, ZeroDivisionError):
+				interest_coverage_cy = -999
+				interest_coverage_avg = -999
 
-		# analyst following
-		try:
-			analyst_following = recommendations[['strongBuy', 'buy', 'hold', 'sell', 'strongSell']].sum(axis=1).mean()
-		except KeyError:
-			analyst_following = -999
+			# cy debt / equity ratio       
+			try:
+				debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
+				debt_equity_cy = debt_equity.iloc[0] # cy debt-equity ratio
+			except (KeyError, ZeroDivisionError):
+				debt_equity_cy = -999
 
-		# Store stock metrics in a dictionary
-		stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'cash_assets_cy': cash_assets_cy, 'analyst_folliwng': analyst_following}
+			# cy P/B
+			try:
+				pb = stock_info['priceToBook']
+			except KeyError:
+				pb = -999
 
-	else:
+			# cy P/E
+			try:
+				pe = stock_info['currentPrice'] / stock_info['trailingEps']
+			except (KeyError, ZeroDivisionError):
+				pe = -999
+			
+			# Company information
+			try:
+				long_name = stock_info['longName']
+			except KeyError:
+				long_name = 'NA'
+			
+			# Industry
+			try:
+				industry = stock_info['industry']
+			except KeyError:
+				industry = 'N/A'
+
+			# Market cap
+			try:
+				market_cap = stock_info['marketCap']
+				# Convert to millions
+				market_cap = market_cap / 1000000
+			except KeyError:
+				market_cap = -999
+
+			# cy cash / equity ratio
+			try:
+				cash_assets = balance_sheet.loc['Cash Cash Equivalents And Short Term Investments'] / balance_sheet.loc['Total Assets']
+				cash_assets_cy = cash_assets.iloc[0] # cy ratio
+			except (KeyError, ZeroDivisionError):
+				cash_assets_cy = -999
+
+			# analyst following
+			try:
+				analyst_following = recommendations[['strongBuy', 'buy', 'hold', 'sell', 'strongSell']].sum(axis=1).mean()
+			except KeyError:
+				analyst_following = -999
+
+			# Store stock metrics in a dictionary
+			stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'cash_assets_cy': cash_assets_cy, 'analyst_folliwng': analyst_following}
+
+		else:
+			stock_dict = None
+
+	except IndexError:
 		stock_dict = None
 
 	return stock_dict
