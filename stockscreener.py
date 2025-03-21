@@ -154,7 +154,7 @@ def calculate_stock_metrics_dict(stock_ticker):
         else:
             stock_dict = None
 
-    except IndexError:
+    except (IndexError, AttributeError):
         stock_dict = None
 
     return stock_dict
