@@ -248,8 +248,8 @@ def main():
         stocks_df = parse_to_dataframe(stocks_list)
 
         # Output screeners
-        # output_file = f'{market}_stock_screener_{date_today}.csv'
-        # stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+        output_file = f'{market}_stock_screener_{date_today}.csv'
+        stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
         stocks_real_estate_low_pb_df = screener_real_estate_low_pb(stocks_df)
         output_filtered_1_file = f'{market}_real_estate_low_pb_{date_today}.csv'
