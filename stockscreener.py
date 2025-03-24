@@ -103,17 +103,35 @@ def calculate_stock_metrics_dict(stock_ticker):
             except (KeyError, ZeroDivisionError):
                 debt_equity_cy = -999
 
+            try:
+                debt_assets = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Total Assets']
+                debt_assets_cy = debt_assets.iloc[0] # cy debt-total assets ratio
+            except (KeyError, ZeroDivisionError):
+                debt_assets_cy = -999
+
+            # cy current assets / total assets ratio
+            try:
+                current_assets_assets = balance_sheet.loc['Current Assets'] / balance_sheet.loc['Total Assets']
+                current_assets_assets_cy = current_assets_assets.iloc[0] # cy current assets-total assets ratio
+            except (KeyError, ZeroDivisionError):
+                current_assets_assets_cy = -999
+
             # cy P/B
             try:
                 pb = stock_info['priceToBook']
             except KeyError:
                 pb = -999
 
-            # cy P/E
+            # forward-looking P/E
             try:
-                pe = stock_info['currentPrice'] / stock_info['trailingEps']
+                pe_forward = stock_info['currentPrice'] / stock_info['forwardEps']
             except (KeyError, ZeroDivisionError):
-                pe = -999
+                pe_forward = -999
+
+            try:
+                pe_trailing = stock_info['currentPrice'] / stock_info['epsTrailingTwelveMonths']
+            except (KeyError, ZeroDivisionError):
+                pe_trailing = -999
             
             # Company information
             try:
@@ -149,7 +167,7 @@ def calculate_stock_metrics_dict(stock_ticker):
                 analyst_following = -999
 
             # Store stock metrics in a dictionary
-            stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe': pe, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'cash_assets_cy': cash_assets_cy, 'analyst_folliwng': analyst_following}
+            stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe_forward': pe_forward, 'pe_trailing': pe_trailing, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_assets_cy': debt_assets_cy, 'cash_assets_cy': cash_assets_cy, 'current_assets_assets_cy': current_assets_assets_cy, 'analyst_folliwng': analyst_following}
 
         else:
             stock_dict = None
@@ -187,21 +205,21 @@ def screener_real_estate_low_pb(df, max_pb_ratio=0.7):
     return df_segment
 
 
-def screener_net_net(df, max_pb_ratio=0.8, min_cash_assets_ratio=0.5):
+def screener_net_net(df, max_pb_ratio=0.85, min_cash_assets_ratio=0.35, min_current_assets_assets_ratio=0.75):
 
     # Low PB
     df_segment = df[df['pb'].between(0, max_pb_ratio)]
     
-    # High cash ratio
-    df_segment = df_segment[df_segment['cash_assets_cy'] >= min_cash_assets_ratio]
+    # High cash ratio or high current assets
+    df_segment = df_segment[(df_segment['cash_assets_cy'] >= min_cash_assets_ratio) | (df_segment['current_assets_assets_cy'] >= min_current_assets_assets_ratio)]
 
     return df_segment
 
 
-def screener_low_debt(df, max_debt_ratio=0.15):
+def screener_low_debt(df, max_debt_ratio=0.25):
 
     # Low debt
-    df_segment = df[df['debt_equity_cy'] <= max_debt_ratio]
+    df_segment = df[(df['debt_equity_cy'] <= max_debt_ratio) | (df['debt_assets_cy'] <= max_debt_ratio)]
 
     return df_segment
 
