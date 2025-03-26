@@ -96,6 +96,12 @@ def calculate_stock_metrics_dict(stock_ticker):
                 interest_coverage_cy = -999
                 interest_coverage_avg = -999
 
+            try:
+                investments_assets = (balance_sheet.loc['Investment Properties'] + balance_sheet.loc['Other Short Term Investments'] + balance_sheet.loc['Available For Sale Securities']) / balance_sheet.loc['Total Assets']
+                investments_assets_cy = investments_assets.iloc[0] # cy investment properties / total assets
+            except (KeyError, ZeroDivisionError):
+                investments_assets_cy = -999
+
             # cy debt / equity ratio       
             try:
                 debt_equity = balance_sheet.loc['Total Debt'] / balance_sheet.loc['Stockholders Equity']
@@ -167,7 +173,7 @@ def calculate_stock_metrics_dict(stock_ticker):
                 analyst_following = -999
 
             # Store stock metrics in a dictionary
-            stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe_forward': pe_forward, 'pe_trailing': pe_trailing, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_assets_cy': debt_assets_cy, 'cash_assets_cy': cash_assets_cy, 'current_assets_assets_cy': current_assets_assets_cy, 'analyst_folliwng': analyst_following}
+            stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe_forward': pe_forward, 'pe_trailing': pe_trailing, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_assets_cy': debt_assets_cy, 'cash_assets_cy': cash_assets_cy, 'current_assets_assets_cy': current_assets_assets_cy, 'analyst_folliwng': analyst_following, 'investments_assets_cy': investments_assets_cy}
 
         else:
             stock_dict = None
@@ -193,25 +199,21 @@ def parse_to_dataframe(list_of_dicts):
     return df
 
 
-def screener_real_estate_low_pb(df, max_pb_ratio=0.7):
-
-    # Real estate only
-    list_of_real_estate_industries = ['reit', 'real estate', 'lodging']
-    df_segment = df[df['industry'].str.contains('|'.join(list_of_real_estate_industries), case=False)]
+def screener_investments_low_pb(df, max_pb_ratio=0.7):
 
     # Low PB
-    df_segment = df_segment[df_segment['pb'].between(0, max_pb_ratio)]
+    df_segment = df[(df['investments_assets_cy'] > 0.5) & (df['pb'].between(0, max_pb_ratio))]
 
     return df_segment
 
 
-def screener_net_net(df, max_pb_ratio=0.85, min_cash_assets_ratio=0.35, min_current_assets_assets_ratio=0.75):
+def screener_net_net(df, max_pb_ratio=0.8, min_cash_assets_ratio=0.5):
 
     # Low PB
     df_segment = df[df['pb'].between(0, max_pb_ratio)]
     
     # High cash ratio or high current assets
-    df_segment = df_segment[(df_segment['cash_assets_cy'] >= min_cash_assets_ratio) | (df_segment['current_assets_assets_cy'] >= min_current_assets_assets_ratio)]
+    df_segment = df_segment[df_segment['cash_assets_cy'] >= min_cash_assets_ratio]
 
     return df_segment
 
@@ -266,12 +268,12 @@ def main():
         stocks_df = parse_to_dataframe(stocks_list)
 
         # Output screeners
-        output_file = f'{market}_stock_screener_{date_today}.csv'
-        stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
+        # output_file = f'{market}_stock_screener_{date_today}.csv'
+        # stocks_df.to_csv(os.path.join(output_directory, output_file), index=False)
 
-        stocks_real_estate_low_pb_df = screener_real_estate_low_pb(stocks_df)
-        output_filtered_1_file = f'{market}_real_estate_low_pb_{date_today}.csv'
-        stocks_real_estate_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1_file), index=False)
+        stocks_investments_low_pb_df = screener_investments_low_pb(stocks_df)
+        output_filtered_1_file = f'{market}_investments_low_pb_{date_today}.csv'
+        stocks_investments_low_pb_df.to_csv(os.path.join(output_directory, output_filtered_1_file), index=False)
 
         stocks_net_net_df = screener_net_net(stocks_df)
         output_filtered_2_file = f'{market}_net_net_{date_today}.csv'
