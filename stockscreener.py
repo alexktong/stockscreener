@@ -56,9 +56,8 @@ def read_tickers(file_tickers):
 
 def calculate_stock_metrics_dict(stock_ticker):
 
-    stock = yf.Ticker(stock_ticker)
-
     try:
+        stock = yf.Ticker(stock_ticker)
         stock_info = stock.info
         income_statement = stock.income_stmt
         income_statement = income_statement.fillna(0)
@@ -178,7 +177,7 @@ def calculate_stock_metrics_dict(stock_ticker):
         else:
             stock_dict = None
 
-    except (IndexError, AttributeError):
+    except:
         stock_dict = None
 
     return stock_dict
