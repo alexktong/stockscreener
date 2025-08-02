@@ -60,16 +60,14 @@ def calculate_stock_metrics_dict(stock_ticker):
         stock = yf.Ticker(stock_ticker)
         stock_info = stock.info
         income_statement = stock.income_stmt
-        income_statement = income_statement.fillna(0)
-        
         balance_sheet = stock.balance_sheet
-        balance_sheet = balance_sheet.fillna(0)
-
         recommendations = stock.recommendations
         
-        if len(income_statement) > 0 and len(balance_sheet) > 0:
+        if not income_statement.empty and not balance_sheet.empty:
+            income_statement = income_statement.fillna(0)
+            balance_sheet = balance_sheet.fillna(0)
         
-            # ROCE
+            # ROCE          
             try:
                 # ROCE = EBIT / Total Assets
                 roce = (income_statement.loc['Pretax Income'] + income_statement.loc['Interest Expense']) / balance_sheet.loc['Total Assets']
@@ -172,14 +170,29 @@ def calculate_stock_metrics_dict(stock_ticker):
                 analyst_following = -999
 
             # Store stock metrics in a dictionary
-            stock_dict = {'ticker': stock_ticker, 'name': long_name, 'industry': industry, 'mktcap (m)': market_cap, 'pb': pb, 'pe_forward': pe_forward, 'pe_trailing': pe_trailing, 'roce_cy': roce_cy, 'roce_avg': roce_avg, 'ebit_margin': ebit_margin, 'interest_cov_cy': interest_coverage_cy, 'interest_cov_avg': interest_coverage_avg, 'debt_equity_cy': debt_equity_cy, 'debt_assets_cy': debt_assets_cy, 'cash_assets_cy': cash_assets_cy, 'current_assets_assets_cy': current_assets_assets_cy, 'analyst_folliwng': analyst_following, 'investments_assets_cy': investments_assets_cy}
-
-        else:
-            stock_dict = None
-
-    except:
+            stock_dict = {
+                'ticker': stock_ticker, 
+                'name': long_name, 
+                'industry': industry, 
+                'mktcap (m)': market_cap, 
+                'pb': pb, 
+                'pe_forward': pe_forward, 
+                'pe_trailing': pe_trailing, 
+                'roce_cy': roce_cy, 
+                'roce_avg': roce_avg, 
+                'ebit_margin': ebit_margin, 
+                'interest_cov_cy': interest_coverage_cy, 
+                'interest_cov_avg': interest_coverage_avg, 
+                'debt_equity_cy': debt_equity_cy, 
+                'debt_assets_cy': debt_assets_cy, 
+                'cash_assets_cy': cash_assets_cy, 
+                'current_assets_assets_cy': current_assets_assets_cy, 
+                'analyst_following': analyst_following, 
+                'investments_assets_cy': investments_assets_cy
+            }
+            return stock_dict
+    except Exception:
         stock_dict = None
-
     return stock_dict
 
 
